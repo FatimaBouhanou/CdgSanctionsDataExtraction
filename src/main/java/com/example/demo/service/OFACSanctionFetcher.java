@@ -76,14 +76,14 @@ public class OFACSanctionFetcher {
             }
 
             // ✅ Dummy record for testing
-            SanctionedEntity testEntity = new SanctionedEntity();
+           /* SanctionedEntity testEntity = new SanctionedEntity();
             testEntity.setName("Test Person");
             testEntity.setCountry("Test Country");
             testEntity.setSanctionList("Test List");
             testEntity.setReason("Testing Insert");
 
             repository.save(testEntity);
-            System.out.println("✅ Test Insert Completed!");
+            System.out.println("✅ Test Insert Completed!");*/
 
             System.out.println("OFAC sanctions list updated successfully.");
         } catch (Exception e) {
