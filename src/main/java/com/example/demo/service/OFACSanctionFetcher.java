@@ -27,7 +27,7 @@ public class OFACSanctionFetcher {
     }
 
     // ✅ Run every 30 seconds for testing (change later)
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(cron = "0 */10 * * * *")//run every 10min
     @Transactional
     public void fetchAndStoreOFACSanction() {
         try {
