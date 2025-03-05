@@ -21,10 +21,34 @@ public class DataIngestionService {
         this.repository = repository;
     }
 
+    public void ingestData(String source) {
+        try {
+            // Start of data extraction
+            System.out.println("Starting data extraction from source: " + source);
 
-    public void ingestData(String source) throws IOException{
-        DataExtractor extractor = extractorFactory.getExtractor(source);
-        List<SanctionedEntity> entities= extractor.extracData(source);
-        repository.saveAll(entities);
+            DataExtractor extractor = extractorFactory.getExtractor(source);
+            List<SanctionedEntity> entities = extractor.extracData(source);
+
+            // After extraction
+            System.out.println("Data extraction complete. Extracted " + (entities != null ? entities.size() : 0) + " entities.");
+
+            if (entities != null && !entities.isEmpty()) {
+                // Before saving data
+                System.out.println("Saving " + entities.size() + " entities to the database...");
+
+                repository.saveAll(entities);
+
+                // After saving
+                System.out.println("Data ingestion successful. Saved " + entities.size() + " entities.");
+            } else {
+                System.out.println("No data extracted or the list is empty.");
+            }
+        } catch (IOException e) {
+            System.err.println("Error during data ingestion: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Unexpected error: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

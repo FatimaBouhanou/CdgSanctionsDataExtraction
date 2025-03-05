@@ -1,31 +1,25 @@
 package com.example.demo.factory;
 
-import com.example.demo.extractors.*;
-import lombok.AllArgsConstructor;
+import com.example.demo.extractors.XmlDataExtractor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 @Component
 public class DataExtractorFactory {
-    private final List<DataExtractor> extractors;
+
+    private final XmlDataExtractor xmlDataExtractor;
 
     @Autowired
-    public DataExtractorFactory(List<DataExtractor> extractors) {
-        this.extractors = extractors;
+    public DataExtractorFactory(XmlDataExtractor xmlDataExtractor) {
+        this.xmlDataExtractor = xmlDataExtractor;
     }
 
-    public DataExtractor getExtractor(String source) {
-        if (source.endsWith(".csv")) {
-            return extractors.stream().filter(e -> e instanceof CsvDataExtractor).findFirst().orElseThrow();
-        } else if (source.endsWith(".json")) {
-            return extractors.stream().filter(e -> e instanceof JsonDataExtractor).findFirst().orElseThrow();
-        } else if (source.endsWith(".xml")) {
-            return extractors.stream().filter(e -> e instanceof XmlDataExtractor).findFirst().orElseThrow();
-        } else if (source.startsWith("http")) {
-            return extractors.stream().filter(e -> e instanceof ApiDataExtractor).findFirst().orElseThrow();
+    public XmlDataExtractor getExtractor(String source) {
+        // Check if the source is an XML file or URL
+        if (source.endsWith(".xml") || source.startsWith("http")) {
+            return xmlDataExtractor;
         }
+
         throw new IllegalArgumentException("Unsupported data format: " + source);
     }
 }
-
