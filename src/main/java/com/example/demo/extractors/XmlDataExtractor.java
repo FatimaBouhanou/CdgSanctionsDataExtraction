@@ -2,13 +2,15 @@ package com.example.demo.extractors;
 
 import com.example.demo.model.SanctionedEntity;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class XmlExtractor implements DataExtractor {
+@Component
+public class XmlDataExtractor implements DataExtractor {
     private final XmlMapper xmlMapper = new XmlMapper();
 
     @Override

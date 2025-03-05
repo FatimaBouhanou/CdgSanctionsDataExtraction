@@ -87,7 +87,11 @@
             <artifactId>mapstruct-processor</artifactId>
             <version>1.5.5.Final</version>
         </dependency>
-
+        <!-- Spring WebFlux (Required for WebClient) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
         <!-- jackson xml -->
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
