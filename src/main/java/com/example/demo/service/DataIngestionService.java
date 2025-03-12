@@ -3,51 +3,66 @@ package com.example.demo.service;
 import com.example.demo.extractors.DataExtractor;
 import com.example.demo.factory.DataExtractorFactory;
 import com.example.demo.model.SanctionedEntity;
+import com.example.demo.model.DataSourceEntity;
 import com.example.demo.repository.SanctionedEntityRepository;
+import com.example.demo.repository.DataSourceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.List;
 
 @Service
 public class DataIngestionService {
+
     private final DataExtractorFactory extractorFactory;
     private final SanctionedEntityRepository repository;
+    private final DataSourceRepository dataSourceRepository;
 
     @Autowired
-    public DataIngestionService(DataExtractorFactory extractorFactory, SanctionedEntityRepository repository) {
+    public DataIngestionService(DataExtractorFactory extractorFactory,
+                                SanctionedEntityRepository repository,
+                                DataSourceRepository dataSourceRepository) {
         this.extractorFactory = extractorFactory;
         this.repository = repository;
+        this.dataSourceRepository = dataSourceRepository;
     }
 
-    public void ingestData(String source) {
+    /**
+     * Ingests data from all enabled sources.
+     */
+    public void ingestAllData() {
+        List<DataSourceEntity> sources = dataSourceRepository.findByEnabledTrue(); // ✅ Fetch only enabled sources
+
+        if (sources.isEmpty()) {
+            System.err.println("No enabled data sources found.");
+            return;
+        }
+
+        for (DataSourceEntity source : sources) {
+            ingestDataFromSource(source.getSourceUrl());
+        }
+    }
+
+    /**
+     * Ingests data from a single source URL.
+     * @param sourceUrl The URL of the data source.
+     */
+    public void ingestDataFromSource(String sourceUrl) {
         try {
-            // Start of data extraction
-            System.out.println("Starting data extraction from source: " + source);
+            System.out.println("Starting data extraction from source: " + sourceUrl);
 
-            DataExtractor extractor = extractorFactory.getExtractor(source);
-            List<SanctionedEntity> entities = extractor.extracData(source);
+            DataExtractor extractor = extractorFactory.getExtractor(sourceUrl);
+            List<SanctionedEntity> entities = extractor.extractData(sourceUrl);
 
-            // After extraction
-            System.out.println("Data extraction complete. Extracted " + (entities != null ? entities.size() : 0) + " entities.");
-
-            if (entities != null && !entities.isEmpty()) {
-                // Before saving data
-                System.out.println("Saving " + entities.size() + " entities to the database...");
-
-                repository.saveAll(entities);
-
-                // After saving
-                System.out.println("Data ingestion successful. Saved " + entities.size() + " entities.");
-            } else {
-                System.out.println("No data extracted or the list is empty.");
+            if (entities == null || entities.isEmpty()) {
+                System.err.println("No data extracted from: " + sourceUrl);
+                return;
             }
-        } catch (IOException e) {
-            System.err.println("Error during data ingestion: " + e.getMessage());
-            e.printStackTrace();
+
+            repository.saveAll(entities);
+            System.out.println("Data ingestion successful. Saved " + entities.size() + " entities from: " + sourceUrl);
         } catch (Exception e) {
-            System.err.println("Unexpected error: " + e.getMessage());
+            System.err.println("Error processing source: " + sourceUrl + " - " + e.getMessage());
             e.printStackTrace();
         }
     }

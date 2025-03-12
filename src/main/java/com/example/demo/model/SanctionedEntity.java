@@ -1,31 +1,51 @@
 package com.example.demo.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Entity
 @Table(name = "sanctions")
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
-@JsonIgnoreProperties(ignoreUnknown = true)  // Ignore unknown properties
 public class SanctionedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JacksonXmlProperty(localName = "lastName")  // Correctly maps to <lastName>
+
+    @Column(unique = true, nullable = false)
+    private String uid;
+    @Column(name = "last_name")
     private String name;
 
-    @JacksonXmlProperty(localName = "country")  // Correctly maps to <country>
+    @Column(name = "sanction_type")
+    private String sdnType;
+
+    @ElementCollection
+    @CollectionTable(name = "sanction_programs", joinColumns = @JoinColumn(name = "sanction_id"))
+    @Column(name = "program_name")
+    private List<String> programs;
+
+    @Column(name = "country")
     private String country;
 
-    private String sanctionList = "OFAC";  // Hardcoded value
+    @Column(name = "sanction_list")
+    private String sanctionList = "OFAC";
 
-    private String reason = "Sanctioned by OFAC";  // Default reason
+    @Column(name = "reason")
+    private String reason = "Sanctioned by OFAC";
+
+
+
+    public void setUid(String uid) {
+        if (uid == null || uid.trim().isEmpty()) {
+            throw new IllegalArgumentException("UID cannot be null or empty");
+        }
+        this.uid = uid;
+    }
 }

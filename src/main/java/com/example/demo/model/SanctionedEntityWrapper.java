@@ -1,18 +1,20 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JacksonXmlRootElement(localName = "sdnList")
 public class SanctionedEntityWrapper {
 
-    @JacksonXmlElementWrapper(localName = "sdnEntries")  // This wraps the list of sdnEntry elements
-    @JacksonXmlProperty(localName = "sdnEntry")  // Each sdnEntry is an individual entity
-    private List<SanctionedEntity> sdnEntries;
+    @JacksonXmlElementWrapper(useWrapping = false) // Ensures list is handled properly
+    @JacksonXmlProperty(localName = "sdnEntry")
+    private List<SanctionedEntity> sdnEntries;  // ✅ Fix: Changed "sdnEntry" → "sdnEntries" to match repository call
 
-    // Getter and Setter
-    public List<SanctionedEntity> getSdnEntries() {
+    public List<SanctionedEntity> getSdnEntries() { // ✅ Fix: Method name matches the field
         return sdnEntries;
     }
 
