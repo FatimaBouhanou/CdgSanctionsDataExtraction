@@ -1,25 +1,29 @@
 package com.example.demo.factory;
 
+import com.example.demo.extractors.CsvDataExtractor;
+
+import com.example.demo.extractors.DataExtractor;
 import com.example.demo.extractors.XmlDataExtractor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DataExtractorFactory {
 
     private final XmlDataExtractor xmlDataExtractor;
+    private final CsvDataExtractor csvDataExtractor;
 
-    @Autowired
-    public DataExtractorFactory(XmlDataExtractor xmlDataExtractor) {
+    public DataExtractorFactory(XmlDataExtractor xmlDataExtractor, CsvDataExtractor csvDataExtractor) {
         this.xmlDataExtractor = xmlDataExtractor;
+        this.csvDataExtractor = csvDataExtractor;
     }
 
-    public XmlDataExtractor getExtractor(String source) {
-        // Check if the source is an XML file or URL
-        if (source.endsWith(".xml") || source.startsWith("http")) {
+    public DataExtractor getExtractor(String sourceUrl) {
+        if (sourceUrl.endsWith(".xml")) {
             return xmlDataExtractor;
+        } else if (sourceUrl.endsWith(".csv")) {
+            return csvDataExtractor;
         }
-
-        throw new IllegalArgumentException("Unsupported data format: " + source);
+        throw new IllegalArgumentException("Unsupported file type: " + sourceUrl);
     }
 }
+

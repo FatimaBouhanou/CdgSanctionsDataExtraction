@@ -49,21 +49,22 @@ public class DataIngestionService {
      */
     public void ingestDataFromSource(String sourceUrl) {
         try {
-            System.out.println("Starting data extraction from source: " + sourceUrl);
+            System.out.println("Starting data extraction from: " + sourceUrl);
 
             DataExtractor extractor = extractorFactory.getExtractor(sourceUrl);
             List<SanctionedEntity> entities = extractor.extractData(sourceUrl);
 
-            if (entities == null || entities.isEmpty()) {
+            if (entities.isEmpty()) {
                 System.err.println("No data extracted from: " + sourceUrl);
                 return;
             }
 
             repository.saveAll(entities);
-            System.out.println("Data ingestion successful. Saved " + entities.size() + " entities from: " + sourceUrl);
+            System.out.println("Data ingestion successful for: " + sourceUrl);
         } catch (Exception e) {
             System.err.println("Error processing source: " + sourceUrl + " - " + e.getMessage());
             e.printStackTrace();
         }
     }
+
 }

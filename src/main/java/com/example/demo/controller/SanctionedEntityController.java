@@ -13,7 +13,7 @@ public class SanctionedEntityController {
     @Autowired
     private SanctionedEntityService service;
 
-    @GetMapping("/search")
+    @GetMapping(value = "/search", produces = "application/json")
     public List<SanctionedEntity> search(@RequestParam String name) {
         return service.searchEntitiesByName(name);
     }
