@@ -14,9 +14,12 @@ public class SanctionedEntityController {
     private SanctionedEntityService service;
 
     @GetMapping(value = "/search", produces = "application/json")
-    public List<SanctionedEntity> search(@RequestParam String name) {
-        return service.searchEntitiesByName(name);
+    public List<SanctionedEntity> search(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) String uid,
+            @RequestParam(required = false) String sanctionType) {
+
+        return service.searchEntities(name, country, uid, sanctionType);
     }
 }
-
-

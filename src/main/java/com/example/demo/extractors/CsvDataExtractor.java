@@ -30,6 +30,7 @@ public class CsvDataExtractor implements DataExtractor {
                 entity.setSanctionList(csvRecord.get("sanction_list"));
                 entity.setUid(csvRecord.get("uid"));
                 entity.setSdnType(csvRecord.get("sanction_type"));
+
                 //handling null country value
                 String country = csvRecord.get("country");
                 if (country == null || country.trim().isEmpty()) {

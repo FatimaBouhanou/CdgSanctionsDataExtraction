@@ -21,4 +21,6 @@ public interface SanctionedEntityRepository extends JpaRepository<SanctionedEnti
     @Query("SELECT e FROM SanctionedEntity e WHERE LOWER(e.name) LIKE LOWER(CONCAT('%', :name, '%')) ORDER BY LENGTH(e.name)")
     List<SanctionedEntity> findByNameSimilar(String name);
     boolean existsByName(String name);
+    List<SanctionedEntity> findByCountryIgnoreCase(String country);
+    List<SanctionedEntity> findBySdnTypeIgnoreCase(String sndType);
 }
