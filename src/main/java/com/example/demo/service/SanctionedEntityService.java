@@ -5,6 +5,7 @@ import com.example.demo.repository.SanctionedEntityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -14,23 +15,29 @@ public class SanctionedEntityService {
     private SanctionedEntityRepository repository;
 
     public List<SanctionedEntity> searchEntities(String name, String country, String uid, String sanctionType) {
+        List<SanctionedEntity> results = Collections.emptyList(); // Default empty list
+
         if (name != null && !name.isEmpty()) {
-            return searchEntitiesByName(name);
+            results = searchEntitiesByName(name);
         } else if (country != null && !country.isEmpty()) {
-            return repository.findByCountryIgnoreCase(country);
+            results = repository.findByCountryIgnoreCase(country);
         } else if (sanctionType != null && !sanctionType.isEmpty()) {
-            return repository.findBySdnTypeIgnoreCase(sanctionType);
+            results = repository.findBySdnTypeIgnoreCase(sanctionType);
+        } else {
+            results = repository.findAll();
         }
-        //return all entities if no filter is applied
-        return repository.findAll();
+
+        return results.isEmpty() ? Collections.emptyList() : results;
     }
 
     private List<SanctionedEntity> searchEntitiesByName(String name) {
         List<SanctionedEntity> exactMatches = repository.findByNameIgnoreCase(name);
         List<SanctionedEntity> similarMatches = repository.findByNameSimilar(name);
 
-        return Stream.concat(exactMatches.stream(), similarMatches.stream())
+        List<SanctionedEntity> combinedResults = Stream.concat(exactMatches.stream(), similarMatches.stream())
                 .distinct()
                 .toList();
+
+        return combinedResults.isEmpty() ? Collections.emptyList() : combinedResults;
     }
 }
