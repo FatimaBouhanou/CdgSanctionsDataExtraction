@@ -17,9 +17,9 @@ public class SanctionedEntityController {
     public List<SanctionedEntity> search(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String country,
-            @RequestParam(required = false) String uid,
+
             @RequestParam(required = false) String sanctionType) {
 
-        return service.searchEntities(name, country, uid, sanctionType);
+        return service.searchEntities(name, country, sanctionType);
     }
 }

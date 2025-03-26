@@ -82,15 +82,15 @@ public class XmlDataExtractor implements DataExtractor {
 
                 // Create SanctionedEntity object
                 SanctionedEntity entity = new SanctionedEntity();
-                entity.setName(name);
-                entity.setCountry(country);
+                entity.setSanctionedName(name);
+                entity.setSanctionCountry(country);
                 entity.setSanctionList("OFAC");
-                entity.setReason("Sanctioned by OFAC");
-                entity.setSdnType(sanctionType);  // Set the sanction type
+                entity.setSanctionReason("Sanctioned by OFAC");
+                entity.setSanctionType(sanctionType);  // Set the sanction type
 
                 // Generate a unique UID (e.g., using UUID)
-                String uniqueUid = UUID.randomUUID().toString();
-                entity.setUid(uniqueUid);
+//                String uniqueUid = UUID.randomUUID().toString();
+//                entity.setUid(uniqueUid);
 
                 // Add to the list
                 sanctionedEntities.add(entity);

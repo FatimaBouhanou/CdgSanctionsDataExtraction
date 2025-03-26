@@ -30,4 +30,43 @@ public class DataSourceEntity {
     private boolean enabled = true;
 
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setSourceName(String sourceName) {
+        this.sourceName = sourceName;
+    }
+
+    public void setSourceUrl(String sourceUrl) {
+        this.sourceUrl = sourceUrl;
+    }
+
+    public void setDataType(DataType dataType) {
+        this.dataType = dataType;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getSourceName() {
+        return sourceName;
+    }
+
+    public String getSourceUrl() {
+        return sourceUrl;
+    }
+
+    public DataType getDataType() {
+        return dataType;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
 }

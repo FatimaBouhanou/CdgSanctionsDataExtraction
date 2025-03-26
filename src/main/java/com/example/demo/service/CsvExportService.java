@@ -34,17 +34,16 @@ public class CsvExportService {
             for (SanctionedEntity entity : entities) {
                 writer.append(safeValue(entity.getId()))
                         .append(",")
-                        .append(safeValue(entity.getCountry()))
+                        .append(safeValue(entity.getSanctionCountry()))
                         .append(",")
-                        .append(safeValue(entity.getName()))
+                        .append(safeValue(entity.getSanctionedName()))
                         .append(",")
-                        .append(safeValue(entity.getReason()))
+                        .append(safeValue(entity.getSanctionReason()))
                         .append(",")
                         .append(safeValue(entity.getSanctionList()))
                         .append(",")
-                        .append(safeValue(entity.getSdnType()))  // Added sanction type
-                        .append(",")
-                        .append(safeValue(entity.getUid()))
+                        .append(safeValue(entity.getSanctionType()))  // Added sanction type
+
                         .append("\n");
             }
 

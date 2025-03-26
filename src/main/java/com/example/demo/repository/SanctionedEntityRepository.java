@@ -9,18 +9,22 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface SanctionedEntityRepository extends JpaRepository<SanctionedEntity,Long> {
+public interface SanctionedEntityRepository extends JpaRepository<SanctionedEntity, Long> {
 
-
-    Optional<SanctionedEntity> findByName(String name);
+    Optional<SanctionedEntity> findBySanctionedName(String sanctionedName);
 
     // Exact match first
-    List<SanctionedEntity> findByNameIgnoreCase(String name);
+    List<SanctionedEntity> findBySanctionedNameIgnoreCase(String sanctionedName);
 
     // Partial match but sorted by name length (shorter names first)
-    @Query("SELECT e FROM SanctionedEntity e WHERE LOWER(e.name) LIKE LOWER(CONCAT('%', :name, '%')) ORDER BY LENGTH(e.name)")
-    List<SanctionedEntity> findByNameSimilar(String name);
-    boolean existsByName(String name);
-    List<SanctionedEntity> findByCountryIgnoreCase(String country);
-    List<SanctionedEntity> findBySdnTypeIgnoreCase(String sndType);
+    @Query("SELECT e FROM SanctionedEntity e WHERE LOWER(e.sanctionedName) LIKE LOWER(CONCAT('%', :sanctionedName, '%')) ORDER BY LENGTH(e.sanctionedName)")
+    List<SanctionedEntity> findByNameSimilar(String sanctionedName);
+
+    boolean existsBySanctionedName(String sanctionedName);
+
+    List<SanctionedEntity> findBySanctionCountryIgnoreCase(String sanctionCountry);
+
+    // Correct the method signature here
+    List<SanctionedEntity> findBySanctionTypeIgnoreCase(String sanctionType);
 }
+

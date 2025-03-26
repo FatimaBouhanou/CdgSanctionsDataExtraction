@@ -20,23 +20,16 @@ public class CsvDataExtractor implements DataExtractor {
         List<SanctionedEntity> entities = new ArrayList<>();
 
         try (Reader reader = new FileReader(filePath);
-             CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withHeader())) {
+             CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
 
             for (CSVRecord csvRecord : csvParser) {
                 SanctionedEntity entity = new SanctionedEntity();
 
-                entity.setName(csvRecord.get("last_name"));
-                entity.setReason(csvRecord.get("reason"));
-                entity.setSanctionList(csvRecord.get("sanction_list"));
-                entity.setUid(csvRecord.get("uid"));
-                entity.setSdnType(csvRecord.get("sanction_type"));
-
-                //handling null country value
-                String country = csvRecord.get("country");
-                if (country == null || country.trim().isEmpty()) {
-                    country = "Unknown";
-                }
-                entity.setCountry(country);
+                entity.setSanctionedName(getSafeValue(csvRecord, "sanctionedName"));
+                entity.setSanctionReason(getSafeValue(csvRecord, "sanctionReason"));
+                entity.setSanctionList(getSafeValue(csvRecord, "sanctionList"));
+                entity.setSanctionType(getSafeValue(csvRecord, "sdnType"));
+                entity.setSanctionCountry(getSafeValue(csvRecord, "sanctionCountry", "Unknown"));
 
                 entities.add(entity);
             }
@@ -46,5 +39,14 @@ public class CsvDataExtractor implements DataExtractor {
 
         return entities;
     }
+
+    private String getSafeValue(CSVRecord record, String columnName) {
+        return record.isMapped(columnName) ? record.get(columnName) : "";
+    }
+
+    private String getSafeValue(CSVRecord record, String columnName, String defaultValue) {
+        return record.isMapped(columnName) && !record.get(columnName).trim().isEmpty() ? record.get(columnName) : defaultValue;
+    }
+
 
 }

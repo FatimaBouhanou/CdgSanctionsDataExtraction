@@ -14,15 +14,15 @@ public class SanctionedEntityService {
     @Autowired
     private SanctionedEntityRepository repository;
 
-    public List<SanctionedEntity> searchEntities(String name, String country, String uid, String sanctionType) {
+    public List<SanctionedEntity> searchEntities(String name, String country, String sanctionType) {
         List<SanctionedEntity> results = Collections.emptyList(); // Default empty list
 
         if (name != null && !name.isEmpty()) {
             results = searchEntitiesByName(name);
         } else if (country != null && !country.isEmpty()) {
-            results = repository.findByCountryIgnoreCase(country);
+            results = repository.findBySanctionCountryIgnoreCase(country);
         } else if (sanctionType != null && !sanctionType.isEmpty()) {
-            results = repository.findBySdnTypeIgnoreCase(sanctionType);
+            results = repository.findBySanctionTypeIgnoreCase(sanctionType);
         } else {
             results = repository.findAll();
         }
@@ -31,7 +31,7 @@ public class SanctionedEntityService {
     }
 
     private List<SanctionedEntity> searchEntitiesByName(String name) {
-        List<SanctionedEntity> exactMatches = repository.findByNameIgnoreCase(name);
+        List<SanctionedEntity> exactMatches = repository.findBySanctionedNameIgnoreCase(name);
         List<SanctionedEntity> similarMatches = repository.findByNameSimilar(name);
 
         List<SanctionedEntity> combinedResults = Stream.concat(exactMatches.stream(), similarMatches.stream())
