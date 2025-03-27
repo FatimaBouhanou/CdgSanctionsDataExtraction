@@ -10,7 +10,7 @@ import java.util.List;
 
 
 @Entity
-@Table(name = "sanctions")
+@Table(name = "SanctionedEntity")
 
 
 public class SanctionedEntity {
@@ -41,7 +41,7 @@ public class SanctionedEntity {
     private String sanctionList = "OFAC";
 
     @Column(name = "reason", nullable = false)
-    private String SanctionReason = "Sanctioned by OFAC";
+    private String sanctionReason = "Sanctioned by OFAC";
 
     // Additional Constructor with Default Values
     public SanctionedEntity( String name, String sdnType, String country) {
@@ -51,7 +51,7 @@ public class SanctionedEntity {
         //this.programs = programs;
         this.sanctionCountry = country;
         this.sanctionList = "OFAC";  // Default Value
-        this.SanctionReason = "Sanctioned by OFAC"; // Default Value
+        this.sanctionReason = "Sanctioned by OFAC"; // Default Value
     }
 
 //    public void setUid(String uid) {
@@ -88,7 +88,7 @@ public class SanctionedEntity {
     }
 
     public void setSanctionReason(String reason) {
-        this.SanctionReason = reason;
+        this.sanctionReason = reason;
     }
 
     public Long getId() {
@@ -118,6 +118,6 @@ public class SanctionedEntity {
     }
 
     public String getSanctionReason() {
-        return SanctionReason;
+        return sanctionReason;
     }
 }
