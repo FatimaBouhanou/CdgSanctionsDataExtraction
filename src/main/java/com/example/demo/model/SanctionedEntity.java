@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "sanctions")
@@ -16,8 +17,12 @@ import java.util.List;
 @AllArgsConstructor
 public class SanctionedEntity {
 
-
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID) // or AUTO/IDENTITY depending on your DB
+    @Column(name = "uid", nullable = false, updatable = false)
+    private UUID uid;
+
+
     @Column(name = "id")
     private String id;
 

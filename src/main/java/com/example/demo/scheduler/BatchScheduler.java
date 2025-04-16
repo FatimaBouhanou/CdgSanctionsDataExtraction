@@ -27,11 +27,14 @@ public class BatchScheduler {
     @Autowired
     private Job importSanctionsJob;
 
-    @Scheduled(cron = "0 */5 * * * *") //
+    @Scheduled(cron = "*/10 * * * * *") //
 
     public void runBatchJob() {
         try {
             logger.info("Attempting to launch job...");
+            JobParameters params = new JobParametersBuilder()
+                    .addLong("timestamp", System.currentTimeMillis()) // paramètre unique
+                    .toJobParameters();
             JobExecution execution = jobLauncher.run(importSanctionsJob, new JobParameters());
             logger.info("Job execution status: {}", execution.getStatus());
         } catch (Exception e) {

@@ -6,10 +6,14 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.*;
+import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.launch.support.SimpleJobOperator;
 import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -119,13 +123,14 @@ public class BatchConfig {
                               ItemWriter<SanctionedEntity> writer,
                               ItemProcessor<SanctionedEntity, SanctionedEntity> processor) {
         return new StepBuilder("importCsvStep", jobRepository)
-                .<SanctionedEntity, SanctionedEntity>chunk(100, transactionManager)
+                .<SanctionedEntity, SanctionedEntity>chunk(10, transactionManager)
                 .reader(csvReader)
                 .processor(processor)
                 .writer(writer)
                 .faultTolerant()
                 .skip(Exception.class)
                 .skipLimit(10)
+                .allowStartIfComplete(true)
                 .build();
     }
 
@@ -163,7 +168,16 @@ public class BatchConfig {
     }
 
 
-
+    @Bean
+    public JobOperator jobOperator(JobRepository jobRepository, JobExplorer jobExplorer,
+                                   JobLauncher jobLauncher, JobRegistry jobRegistry) {
+        SimpleJobOperator jobOperator = new SimpleJobOperator();
+        jobOperator.setJobRepository(jobRepository);
+        jobOperator.setJobExplorer(jobExplorer);
+        jobOperator.setJobLauncher(jobLauncher);
+        jobOperator.setJobRegistry(jobRegistry);
+        return jobOperator;
+    }
 
 
 
