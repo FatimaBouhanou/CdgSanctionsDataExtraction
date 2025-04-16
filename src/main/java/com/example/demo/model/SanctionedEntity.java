@@ -4,120 +4,63 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
-
 @Entity
-@Table(name = "SanctionedEntity")
-
-
+@Table(name = "sanctions")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SanctionedEntity {
 
-    @Setter
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id")
+    private String id;
 
-//    @Column(unique = true, nullable = false)
-//    private String uid;
+    @Column(name = "data_schema")
+    private String schema;
 
-    @Column(name = "name", nullable = false)
-    private String sanctionedName;
+    @Column(nullable = false)
+    private String name;
 
-    @Column(name = "sdnType", nullable = false)
-    private String sanctionType;
-
-//    @ElementCollection(fetch = FetchType.EAGER)
-//    @CollectionTable(name = "sanction_programs", joinColumns = @JoinColumn(name = "sanction_id"))
-//    @Column(name = "programs")
-//    private List<String> programs;
-
-    @Column(name = "country", nullable = false)
-        private String sanctionCountry;
-
-    @Column(name = "sanctionList", nullable = false)
-    private String sanctionList = "OFAC";
-
-    @Column(name = "reason", nullable = false)
-    private String sanctionReason = "Sanctioned by OFAC";
-
-    // Additional Constructor with Default Values
-    public SanctionedEntity( String name, String sdnType, String country) {
-
-        this.sanctionedName = name;
-        this.sanctionType = sdnType;
-        //this.programs = programs;
-        this.sanctionCountry = country;
-        this.sanctionList = "OFAC";  // Default Value
-        this.sanctionReason = "Sanctioned by OFAC"; // Default Value
-    }
-
-//    public void setUid(String uid) {
-//        if (uid == null || uid.trim().isEmpty()) {
-//            throw new IllegalArgumentException("UID cannot be null or empty");
-//        }
-//        this.uid = uid;
-//    }
+    @Column(name = "aliases")
+    private String aliases;
 
 
-    // Explicit No-Args Constructor
-   public SanctionedEntity() {
-       // Avoid null issues
-    }
+    private String birth_date;
 
-    public void setSanctionedName(String name) {
-        this.sanctionedName = name;
-    }
+    @Column(name = "countries")
+    private String countries;
 
-    public void setSanctionType(String sdnType) {
-        this.sanctionType = sdnType;
-    }
+    @Column(name = "addresses")
+    private String addresses;
 
-//    public void setPrograms(List<String> programs) {
-//        this.programs = programs;
-//    }
+    @Column(name = "identifiers")
+    private String identifiers;
 
-    public void setSanctionCountry(String country) {
-        this.sanctionCountry = country;
-    }
+    @Column(name = "sanctions")
+    private String sanctions;
 
-    public void setSanctionList(String sanctionList) {
-        this.sanctionList = sanctionList;
-    }
+    @Column(name = "phones")
+    private String phones;
 
-    public void setSanctionReason(String reason) {
-        this.sanctionReason = reason;
-    }
+    @Column(name = "emails")
+    private String emails;
 
-    public Long getId() {
-        return id;
-    }
+    private String dataset;
 
 
+    private String first_seen;
 
-    public String getSanctionedName() {
-        return sanctionedName;
-    }
 
-    public String getSanctionType() {
-        return sanctionType;
-    }
+    private String last_seen;
 
-//    public List<String> getPrograms() {
-//        return programs;
-//    }
 
-    public String getSanctionCountry() {
-        return sanctionCountry;
-    }
+    private String last_change;
 
-    public String getSanctionList() {
-        return sanctionList;
-    }
 
-    public String getSanctionReason() {
-        return sanctionReason;
-    }
 }

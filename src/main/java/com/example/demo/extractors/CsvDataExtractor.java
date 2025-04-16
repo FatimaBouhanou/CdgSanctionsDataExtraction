@@ -1,39 +1,50 @@
 package com.example.demo.extractors;
 
-
 import com.example.demo.model.SanctionedEntity;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Component;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class CsvDataExtractor implements DataExtractor {
 
-    public List<SanctionedEntity> extractData(String filePath) {
+    public List<SanctionedEntity> extractData(String fileUrl) {
         List<SanctionedEntity> entities = new ArrayList<>();
 
-        try (Reader reader = new FileReader(filePath);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(fileUrl).openStream()));
              CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
 
-            for (CSVRecord csvRecord : csvParser) {
+            for (CSVRecord record : csvParser) {
                 SanctionedEntity entity = new SanctionedEntity();
-
-                entity.setSanctionedName(getSafeValue(csvRecord, "sanctionedName"));
-                entity.setSanctionReason(getSafeValue(csvRecord, "sanctionReason"));
-                entity.setSanctionList(getSafeValue(csvRecord, "sanctionList"));
-                entity.setSanctionType(getSafeValue(csvRecord, "sdnType"));
-                entity.setSanctionCountry(getSafeValue(csvRecord, "sanctionCountry", "Unknown"));
+                entity.setId(record.get("id"));
+                entity.setSchema(getSafeValue(record, "schema"));
+                entity.setName(getSafeValue(record, "name"));
+                entity.setAliases(getSafeValue(record, "aliases"));
+                entity.setBirth_date(getSafeValue(record, "birthDate"));
+                entity.setCountries(getSafeValue(record, "countries"));
+                entity.setAddresses(getSafeValue(record, "addresses"));
+                entity.setIdentifiers(getSafeValue(record,"identifiers"));
+                entity.setSanctions(getSafeValue(record, "sanctions"));
+                entity.setPhones(getSafeValue(record, "phones"));
+                entity.setEmails(getSafeValue(record, "emails"));
+                entity.setDataset(getSafeValue(record, "dataset"));
+                entity.setFirst_seen(getSafeValue(record, "firstSeen"));
+                entity.setLast_seen(getSafeValue(record, "lastSeen"));
+                entity.setLast_change(getSafeValue(record, "lastChange"));
 
                 entities.add(entity);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -44,9 +55,12 @@ public class CsvDataExtractor implements DataExtractor {
         return record.isMapped(columnName) ? record.get(columnName) : "";
     }
 
-    private String getSafeValue(CSVRecord record, String columnName, String defaultValue) {
-        return record.isMapped(columnName) && !record.get(columnName).trim().isEmpty() ? record.get(columnName) : defaultValue;
+    private LocalDate parseDate(String value) {
+        try {
+            return value != null && !value.isBlank() ? LocalDate.parse(value.trim()) : null;
+        } catch (DateTimeParseException e) {
+            System.err.println("Could not parse date: " + value);
+            return null;
+        }
     }
-
-
 }

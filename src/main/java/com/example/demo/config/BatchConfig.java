@@ -2,12 +2,13 @@ package com.example.demo.config;
 
 import com.example.demo.model.SanctionedEntity;
 import com.example.demo.repository.SanctionedEntityRepository;
-import com.example.demo.model.DataSourceEntity;
-import com.example.demo.model.DataType;
-import com.example.demo.repository.DataSourceRepository;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.batch.core.repository.JobRepository;
@@ -19,160 +20,152 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
+import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 @EnableBatchProcessing
 public class BatchConfig {
 
-    private final DataSourceRepository sourceRepository;
+    private static final Logger log = LoggerFactory.getLogger(BatchConfig.class);
 
-    public BatchConfig(DataSourceRepository sourceRepository) {
-        this.sourceRepository = sourceRepository;
-    }
+    private static final String HARDCODED_URL = "https://data.opensanctions.org/datasets/20250413/peps/targets.simple.csv";
 
-    private String getFilePath(DataType type) {
-        return sourceRepository.findFirstByDataTypeAndEnabledTrueOrderByIdDesc(type)
-                .map(DataSourceEntity::getSourceUrl)
-                .orElseThrow(() -> new RuntimeException(type + " file path not found in database"));
-    }
-
-    // CSV Reader with dynamic file path retrieval
     @Bean
-    public FlatFileItemReader<SanctionedEntity> csvReader() {
-        FlatFileItemReader<SanctionedEntity> reader = new FlatFileItemReader<>();
-        String filePath = getFilePath(DataType.CSV);
-        System.out.println("Reading CSV file from path: " + filePath); // Debugging line
+    public FlatFileItemReader<SanctionedEntity> csvReader() throws MalformedURLException {
+        UrlResource resource = new UrlResource(HARDCODED_URL);
 
-        reader.setResource(new FileSystemResource(filePath));
+        if (!resource.exists()) {
+            throw new MalformedURLException("CSV file not found at: " + HARDCODED_URL);
+        }
+
+        FlatFileItemReader<SanctionedEntity> reader = new FlatFileItemReader<>();
+        reader.setResource(resource);
+        reader.setEncoding(StandardCharsets.UTF_8.name());
         reader.setLinesToSkip(1);
 
-        DefaultLineMapper<SanctionedEntity> lineMapper = new DefaultLineMapper<>();
         DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
         tokenizer.setDelimiter(",");
-        tokenizer.setNames("sanctionCountry", "sanctionedName", "sanctionReason", "sanctionList", "sanctionType");
-        tokenizer.setStrict(false);
         tokenizer.setQuoteCharacter('"');
+        tokenizer.setStrict(false);
+        tokenizer.setNames(
+                "id", "schema", "name", "aliases", "birth_date",
+                "countries", "addresses", "identifiers", "sanctions",
+                "phones", "emails", "dataset", "first_seen", "last_seen", "last_change"
+        );
 
-        BeanWrapperFieldSetMapper<SanctionedEntity> fieldSetMapper = new BeanWrapperFieldSetMapper<>();
-        fieldSetMapper.setTargetType(SanctionedEntity.class);
+        BeanWrapperFieldSetMapper<SanctionedEntity> mapper = new BeanWrapperFieldSetMapper<>();
+        mapper.setTargetType(SanctionedEntity.class);
 
+        DefaultLineMapper<SanctionedEntity> lineMapper = new DefaultLineMapper<>();
         lineMapper.setLineTokenizer(tokenizer);
-        lineMapper.setFieldSetMapper(fieldSetMapper);
+        lineMapper.setFieldSetMapper(mapper);
 
         reader.setLineMapper(lineMapper);
         return reader;
     }
 
-
-    // Processor to handle deduplication
     @Bean
     public ItemProcessor<SanctionedEntity, SanctionedEntity> processor() {
         return entity -> {
             if (entity != null) {
-                System.out.println("Processing: " + entity.getSanctionedName());
+                log.debug("Processing entity: {}", entity.getName());
                 return entity;
             }
-            return null;  // Returning null would cause the record to be skipped
+            return null;
         };
     }
 
-
-
-
-    // Writer
     @Bean
     public ItemWriter<SanctionedEntity> writer(SanctionedEntityRepository repository) {
         return items -> {
-            for (SanctionedEntity item : items) {
+            if (items != null && !items.isEmpty()) {
+                log.info(">>> Saving {} entities...", items.size());
                 try {
-                    System.out.println("Attempting to save: " + item.getSanctionedName());
-                    repository.save(item);
-                    System.out.println("Successfully saved: " + item.getSanctionedName());
+                    repository.saveAll(items);
+                    log.info(">>> Batch saveAll completed.");
                 } catch (Exception e) {
-                    System.err.println("Failed to save: " + item.getSanctionedName() + " due to: " + e.getMessage());
-                    e.printStackTrace();
+                    log.error(">>> Error saving batch: {}", e.getMessage(), e);
+                    log.warn(">>> Attempting to save each entity individually to identify issues...");
+                    for (SanctionedEntity item : items) {
+                        try {
+                            repository.save(item);
+                        } catch (Exception ex) {
+                            log.error(">>> Failed to save entity with ID {}: {}", item.getId(), ex.getMessage(), ex);
+                            log.debug(">>> Failing entity: {}", item);
+                        }
+                    }
                 }
+            } else {
+                log.warn(">>> Received empty item list for writing.");
             }
         };
     }
 
 
-    // CSV Step
+
     @Bean
-    public Step importCsvStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+    public Step importCsvStep(JobRepository jobRepository,
+                              PlatformTransactionManager transactionManager,
                               ItemReader<SanctionedEntity> csvReader,
                               ItemWriter<SanctionedEntity> writer,
                               ItemProcessor<SanctionedEntity, SanctionedEntity> processor) {
         return new StepBuilder("importCsvStep", jobRepository)
-                .<SanctionedEntity, SanctionedEntity>chunk(10, transactionManager) // Testing with a chunk size of 1
+                .<SanctionedEntity, SanctionedEntity>chunk(100, transactionManager)
                 .reader(csvReader)
                 .processor(processor)
                 .writer(writer)
+                .faultTolerant()
+                .skip(Exception.class)
+                .skipLimit(10)
                 .build();
     }
 
-
-    // Batch Job (without XML step)
     @Bean
-    public Job importSanctionsJob(JobRepository jobRepository, Step importCsvStep) {
-        System.out.println("Starting the importSanctionsJob");
+    public Job importSanctionsJob(JobRepository jobRepository,
+                                  Step importCsvStep,
+                                  JobExecutionListener listener) { // inject here
         return new JobBuilder("importSanctionsJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
+                .listener(listener) // use the injected one
                 .start(importCsvStep)
                 .build();
     }
 
 
-    // Transaction Manager
     @Bean
     public PlatformTransactionManager transactionManager(DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
     }
 
-
-
-
-    //listener to monitor the jobs execution
     @Bean
-    public JobExecutionListener jobExecutionListener() {
+    public JobExecutionListener listener() {
         return new JobExecutionListenerSupport() {
             @Override
+            public void beforeJob(JobExecution jobExecution) {
+                log.info("*** Batch job is starting...");
+                System.out.println("=== DEBUG: Listener is working ===");
+            }
+
+            @Override
             public void afterJob(JobExecution jobExecution) {
-                System.out.println("Job Status: " + jobExecution.getStatus());
-                if (jobExecution.getStatus() == BatchStatus.FAILED) {
-                    System.out.println("Failure details: " + jobExecution.getExitStatus());
-                }
+                log.info("*** Batch job finished with status: {}", jobExecution.getStatus());
             }
         };
     }
 
-    /*
-    // XML Reader (Commented out)
-    @Bean
-    public StaxEventItemReader<SanctionedEntity> xmlReader() {
-        // XML processing is disabled
-        return null;
-    }
 
-    // XML Step (Commented out)
-    @Bean
-    public Step importXmlStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
-                              ItemReader<SanctionedEntity> xmlReader,
-                              ItemWriter<SanctionedEntity> writer,
-                              ItemProcessor<SanctionedEntity, SanctionedEntity> processor) {
-        return new StepBuilder("importXmlStep", jobRepository)
-                .<SanctionedEntity, SanctionedEntity>chunk(100, transactionManager)
-                .reader(xmlReader)
-                .processor(processor)
-                .writer(writer)
-                .build();
-    }
-    */
+
+
+
+
+
 }
