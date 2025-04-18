@@ -91,25 +91,40 @@ public class BatchConfig {
 
     //item writer
     @Bean
-    public ItemWriter<SanctionedEntity> writer(SanctionedEntityRepository repository) {
+    public ItemWriter<SanctionedEntity> writer() {
         return items -> {
             if (items != null && !items.isEmpty()) {
-                log.info(">>> Saving {} entities...", items.size());
-
-                try {
-                    repository.saveAll(items);
-                    log.info(">>> Batch saveAll completed.");
-                } catch (Exception e) {
-                    log.error(">>> Error saving batch: {}", e.getMessage(), e);
-                    for (SanctionedEntity item : items) {
-                        log.error("Failed entity: {}", item);
-                    }
+                log.info(">>> Retrieved {} entities from CSV:", items.size());
+                for (SanctionedEntity entity : items) {
+                    log.info(">>> Entity: {}", entity);
                 }
             } else {
-                log.warn(">>> Received empty item list for writing.");
+                log.warn(">>> No items read from CSV.");
             }
         };
     }
+
+
+
+//    public ItemWriter<SanctionedEntity> writer(SanctionedEntityRepository repository) {
+//        return items -> {
+//            if (items != null && !items.isEmpty()) {
+//                log.info(">>> Saving {} entities...", items.size());
+//
+//                try {
+//                    repository.saveAll(items);
+//                    log.info(">>> Batch saveAll completed.");
+//                } catch (Exception e) {
+//                    log.error(">>> Error saving batch: {}", e.getMessage(), e);
+//                    for (SanctionedEntity item : items) {
+//                        log.error("Failed entity: {}", item);
+//                    }
+//                }
+//            } else {
+//                log.warn(">>> Received empty item list for writing.");
+//            }
+//        };
+//    }
 
 
     //step
