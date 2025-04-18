@@ -39,6 +39,8 @@ public class BatchConfig {
 
     private static final String HARDCODED_URL = "https://data.opensanctions.org/datasets/20250413/peps/targets.simple.csv";
 
+
+    //item reader
     @Bean
     public FlatFileItemReader<SanctionedEntity> csvReader() throws MalformedURLException {
         UrlResource resource = new UrlResource(HARDCODED_URL);
@@ -73,6 +75,8 @@ public class BatchConfig {
         return reader;
     }
 
+
+    //item processor
     @Bean
     public ItemProcessor<SanctionedEntity, SanctionedEntity> processor() {
         return entity -> {
@@ -84,6 +88,8 @@ public class BatchConfig {
         };
     }
 
+
+    //item writer
     @Bean
     public ItemWriter<SanctionedEntity> writer(SanctionedEntityRepository repository) {
         return items -> {
@@ -106,6 +112,7 @@ public class BatchConfig {
     }
 
 
+    //step
     @Bean
     public Step importCsvStep(JobRepository jobRepository,
                               PlatformTransactionManager transactionManager,
@@ -124,6 +131,8 @@ public class BatchConfig {
                 .build();
     }
 
+
+    //import job
     @Bean
     public Job importSanctionsJob(JobRepository jobRepository,
                                   Step importCsvStep,
@@ -136,11 +145,14 @@ public class BatchConfig {
     }
 
 
+    //transaction manager
     @Bean
     public PlatformTransactionManager transactionManager(DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
     }
 
+
+    //job execution listener
     @Bean
     public JobExecutionListener listener() {
         return new JobExecutionListenerSupport() {
