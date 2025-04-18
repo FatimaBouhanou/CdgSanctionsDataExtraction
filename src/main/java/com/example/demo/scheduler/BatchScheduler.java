@@ -19,24 +19,26 @@ import java.util.List;
 @Component
 public class BatchScheduler {
 
-    private static final Logger logger = LoggerFactory.getLogger(BatchScheduler.class);
+    private final JobLauncher jobLauncher;
+    private final Job importSanctionsJob;
 
-    @Autowired
-    private JobLauncher jobLauncher;
+    public BatchScheduler(JobLauncher jobLauncher, Job importSanctionsJob) {
+        this.jobLauncher = jobLauncher;
+        this.importSanctionsJob = importSanctionsJob;
+    }
 
-    @Autowired
-    private Job importSanctionsJob;
-
-    @Scheduled(cron = "*/10 * * * * *") //
-
+    @Scheduled(fixedRate = 60000) // or cron, etc.
     public void runBatchJob() {
         try {
-            logger.info("Attempting to launch job...");
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addLong("timestamp", System.currentTimeMillis()) //  unique param
+                    .toJobParameters();
 
-            JobExecution execution = jobLauncher.run(importSanctionsJob, new JobParameters());
-            logger.info("Job execution status: {}", execution.getStatus());
+            JobExecution jobExecution = jobLauncher.run(importSanctionsJob, jobParameters);
+            System.out.println("Job execution status: " + jobExecution.getStatus());
         } catch (Exception e) {
-            logger.error("Job failed to start", e);
+            System.err.println("Job failed to start");
+            e.printStackTrace();
         }
     }
 }

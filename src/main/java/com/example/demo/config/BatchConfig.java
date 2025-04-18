@@ -117,6 +117,7 @@ public class BatchConfig {
                 .reader(csvReader)
                 .processor(processor)
                 .writer(writer)
+               // .allowStartIfComplete(true)  // allow step to re-execute
                 .faultTolerant()
                 .skip(Exception.class)
                 .skipLimit(10)
