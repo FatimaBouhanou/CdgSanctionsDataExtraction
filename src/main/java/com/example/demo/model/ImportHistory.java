@@ -19,10 +19,10 @@ public class ImportHistory {
 private Long id;
 private String fileName;
 private LocalDateTime importDate;
-private long fileSize;
+private Long fileSize;
 private long numberOfLines;
 
-    public ImportHistory(String s, LocalDateTime now, long size, long lines) {
+    public ImportHistory(String s, LocalDateTime now, Long size, long lines) {
         this.fileName=s;
         this.importDate=now;
         this.fileSize=size;
