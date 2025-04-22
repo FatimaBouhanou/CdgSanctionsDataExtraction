@@ -1,7 +1,5 @@
 package com.example.demo.controller;
 
-
-
 import com.example.demo.service.ImportHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +13,8 @@ public class ImportHistoryController {
     private final ImportHistoryService importHistoryService;
 
     @PostMapping("/log")
-    public ResponseEntity<String> logImport(@RequestParam String url) {
-        importHistoryService.logImportMetadata(url);
-        return ResponseEntity.ok("✅ Import metadata logged for: " + url);
+    public ResponseEntity<String> logImport() {
+        importHistoryService.logImportMetadata();
+        return ResponseEntity.ok(" Import metadata logged.");
     }
 }
-
