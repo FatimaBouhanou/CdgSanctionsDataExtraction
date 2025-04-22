@@ -12,9 +12,10 @@ public class ImportHistoryController {
 
     private final ImportHistoryService importHistoryService;
 
-    @PostMapping("/log")
-    public ResponseEntity<String> logImport() {
-        importHistoryService.logImportMetadata();
-        return ResponseEntity.ok(" Import metadata logged.");
+    @PostMapping("/log-all")
+    public ResponseEntity<String> logAllImports() {
+        importHistoryService.processImportData();
+        return ResponseEntity.ok("✅ All import metadata logged.");
     }
+
 }
