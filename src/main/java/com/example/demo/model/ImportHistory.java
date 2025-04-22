@@ -22,6 +22,7 @@ private LocalDateTime importDate;
 private double fileSize;
 private long numberOfLines;
 
+
     public ImportHistory(String s, LocalDateTime now, double size, long lines) {
         this.fileName=s;
         this.importDate=now;
