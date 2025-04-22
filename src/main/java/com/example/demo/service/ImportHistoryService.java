@@ -4,20 +4,27 @@ import com.example.demo.constants.FileType;
 import com.example.demo.model.ImportHistory;
 import com.example.demo.repository.ImportHistoryRepository;
 import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ImportHistoryService {
 
     private final ImportHistoryRepository importHistoryRepository;
@@ -25,81 +32,72 @@ public class ImportHistoryService {
     @Value("#{'${import.data.url}'.split(',')}")
     private List<String> importUrls;
 
-    //importing data
-    @PostConstruct
-    public void processImportData() {
-        for (String urlStr : importUrls) {
+    @Transactional
+    public void logAllImports() {
+        for (String fileUrl : importUrls) {
             try {
-                Path downloadedFile = downloadFile(urlStr);
-                long lineCount = countAllLines(downloadedFile);
-                double sizeInMB = calculateFileSizeInMB(downloadedFile);
+                URL url = new URL(fileUrl.trim());
+                URLConnection connection = url.openConnection();
 
-                String fileName = downloadedFile.getFileName().toString();
-                FileType fileType = detectFileType(fileName);
+                long fileSizeInBytes = connection.getContentLengthLong();
+                double fileSizeInMB = Math.round((fileSizeInBytes / (1024.0 * 1024)) * 100.0) / 100.0;
 
-                ImportHistory history = new ImportHistory(
-                        fileName,
-                        LocalDateTime.now(),
-                        sizeInMB,
-                        lineCount,
-                        fileType
-                );
+                long linesCount;
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+                    linesCount = reader.lines().skip(1).count();
+                }
 
-                importHistoryRepository.save(history);
+                String fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+                LocalDateTime importDate = LocalDateTime.now();
+                FileType fileType = detectFileType(fileUrl);
 
-                // Cleanup if needed
-                Files.deleteIfExists(downloadedFile);
+                log.info(">>> [{}] File metadata:", fileName);
+                log.info(" - Size: {} MB", fileSizeInMB);
+                log.info(" - Lines: {}", linesCount);
+                log.info(" - File Type: {}", fileType);
 
-            } catch (IOException e) {
-                System.err.println("Error processing URL: " + urlStr);
-                e.printStackTrace();
+                ImportHistory history = new ImportHistory(fileName, importDate, fileSizeInMB, linesCount, fileType);
+                ImportHistory saved = importHistoryRepository.save(history);
+
+                log.info(">>> Saved with ID: {}", saved.getId());
+
+            } catch (Exception e) {
+                log.error("Failed to process URL {}: {}", fileUrl, e.getMessage(), e);
             }
         }
     }
 
 
-    //downloading the file
     private Path downloadFile(String urlStr) throws IOException {
         URL url = new URL(urlStr);
-        String fileName = Paths.get(url.getPath()).getFileName().toString();
-        Path targetPath = Files.createTempFile(fileName.replace(".csv", ""), ".csv");
-        Files.copy(url.openStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-        return targetPath;
+        String name = Paths.get(url.getPath()).getFileName().toString();
+        Path temp = Files.createTempFile(name.replace(".csv", ""), ".csv");
+        Files.copy(url.openStream(), temp, StandardCopyOption.REPLACE_EXISTING);
+        return temp;
     }
 
-
-    //line counter
-    private long countAllLines(Path filePath) {
-        long lines = 0;
-        try (BufferedReader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
-            while (reader.readLine() != null) {
-                lines++;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    private long countAllLines(Path filePath) throws IOException {
+        try (BufferedReader r = Files.newBufferedReader(filePath, UTF_8)) {
+            return r.lines().count();
         }
-        return lines;
     }
 
-
-    //calculating file size
     private double calculateFileSizeInMB(Path filePath) throws IOException {
         long bytes = Files.size(filePath);
         return Math.round((bytes / (1024.0 * 1024.0)) * 100.0) / 100.0;
     }
 
-
-    //detecting and matching the file type to the file
     private FileType detectFileType(String fileName) {
-        fileName = fileName.toLowerCase();
-        if (fileName.contains("peps")) {
+        String fn = fileName.toLowerCase();
+        if (fn.contains("peps")) {
             return FileType.PEPS;
-        } else if (fileName.contains("securities")) {
+        } else if (fn.contains("securities")) {
             return FileType.SANCTIONED_SECURITIES;
-        } else if (fileName.contains("warrant") || fileName.contains("crime")) {
+        } else if (fn.contains("warrants") || fn.contains("criminals")) {
             return FileType.WARRANTS_AND_CRIMINALS;
-        } else {
-            throw new IllegalArgumentException("Unknown file type for: " + fileName);
         }
+        throw new IllegalArgumentException("Unknown file type for: " + fileName);
     }
 }
+

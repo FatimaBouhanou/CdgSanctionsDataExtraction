@@ -14,7 +14,7 @@ public class ImportHistoryController {
 
     @PostMapping("/log-all")
     public ResponseEntity<String> logAllImports() {
-        importHistoryService.processImportData();
+        importHistoryService.logAllImports();
         return ResponseEntity.ok("✅ All import metadata logged.");
     }
 
