@@ -22,7 +22,9 @@ private String fileName;
 private LocalDateTime importDate;
 private double fileSize;
 private long numberOfLines;
+
     @Enumerated(EnumType.STRING)
+    @Column(length = 50, nullable = false)
     private FileType fileType;
 
 
